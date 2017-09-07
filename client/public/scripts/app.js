@@ -1,35 +1,49 @@
 var poll = function () {
-    $.getJSON('http://localhost:9000/messages?count=' + babble.counter, function (response) {
-        babble.counter = response.count;
-        babble.users = response.users;
-        document.getElementsByClassName('users')[0].innerHTML = babble.users;
-        document.getElementsByClassName('envelope')[0].innerHTML = babble.counter;
 
+    var http = new XMLHttpRequest();
+    var url = 'http://localhost:9000/messages?count=' + babble.counter;
+    // var params = JSON.stringify({ appoverGUID: approverGUID });
+    http.open("GET", url, true);
 
-        var messages = response.messages;
+    http.setRequestHeader("Content-type", "application/json; charset=utf-8");
 
-        $("ul#message-list").empty();
+    http.onreadystatechange = function () {
+        if (http.readyState == 4 && http.status == 200) {
+            var response = JSON.parse(http.responseText);// alert(http.responseText);
+            babble.counter = response.count;
+            babble.users = response.users;
+            document.getElementsByClassName('users')[0].innerHTML = babble.users;
+            document.getElementsByClassName('envelope')[0].innerHTML = babble.counter;
 
-        messages.forEach(function (m) {
+            var messages = response.messages;
+
+            var msgList = document.getElementById('message-list');
+            msgList.innerHTML = "";
+
 
             var li = '';
-            li += '<li>' + '<div class="comment">';
+            messages.forEach(function (m) {
 
+                li += '<li>' + '<div class="comment">';
 
-            li += '<img src="' + m.pic + '" class="circle" alt="">' +
-                '<span class="user-text">'
-            if (m.email == babble.userInfo.email) {
-                li += '<div class="close" onclick="deleteM(' + m.id + ')">X</div>';
-            }
-            li += '<cite>' + m.email + ' </cite> <small>' + m.time + '</small><br>' + m.text +
-                '</span>' +
-                '</div>' +
-                '</li>';
-            $("ul#message-list").append(li);
-        });
+                li += '<img src="' + m.pic + '" class="circle" alt="">' +
+                    '<span class="user-text">'
+                if (m.email == babble.userInfo.email) {
+                    li += '<div class="close" onclick="deleteM(' + m.id + ')">X</div>';
+                }
+                li += '<cite>' + m.email + ' </cite> <small>' + m.time + '</small><br>' + m.text +
+                    '</span>' +
+                    '</div>' +
+                    '</li>';
 
-        setTimeout(poll, 0);
-    });
+            });
+            msgList.innerHTML = li;
+            //$("ul#message-list").append(li);
+            setTimeout(poll, 0);
+        }
+    }
+    http.send();
+
 };
 
 
@@ -42,21 +56,30 @@ var babble = {
     postMessage: function () {
         var text = document.getElementById('output').value;
         var m = {text: text, email: babble.userInfo.email, pic: babble.userInfo.pic};
-        $.ajax({
-            type: "POST",
-            url: 'http://localhost:9000/messages',
-            data: JSON.stringify({msg: m}),
-            contentType: "application/json",
-            success: function (response) {
+
+        var http = new XMLHttpRequest();
+        var url = "http://localhost:9000/messages";
+        var params = JSON.stringify({msg: m});
+        http.open("POST", url, true);
+
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+
+
+        http.onreadystatechange = function () {
+            if (http.readyState == 4 && http.status == 200) {
+
+                var response = JSON.parse(http.responseText);
                 var messages = response.messages;
                 babble.users = response.users;
                 document.getElementsByClassName('users')[0].innerHTML = babble.users;
-                $("ul#message-list").empty();
+                var msgList = document.getElementById('message-list');
+                msgList.innerHTML = "";
+
+
+                var li = '';
                 messages.forEach(function (m) {
 
-                    var li = '';
                     li += '<li>' + '<div class="comment">';
-
 
                     li += '<img src="' + m.pic + '" class="circle" alt="">' +
                         '<span class="user-text">'
@@ -67,26 +90,38 @@ var babble = {
                         '</span>' +
                         '</div>' +
                         '</li>';
-                    $("ul#message-list").append(li);
+
                 });
-            },
-            dataType: 'json'
-        });
+                msgList.innerHTML = li;
+            }
+            http.send(params);
+        }
+
     },
     deleteMessage: function (id) {
-        $.ajax({
-            type: "DELETE",
-            url: 'http://localhost:9000/messages/' + id,
-            data: {},
-            contentType: "application/json",
-            success: function (response) {
+        var http = new XMLHttpRequest();
+        var url = 'http://localhost:9000/messages' + id;
+
+        http.open("DELETE", url, true);
+
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+
+
+        http.onreadystatechange = function () {
+            if (http.readyState == 4 && http.status == 200) {
+
+                var response = JSON.parse(http.responseText);
                 var messages = response.messages;
-                $("ul#message-list").empty();
+                babble.users = response.users;
+                document.getElementsByClassName('users')[0].innerHTML = babble.users;
+                var msgList = document.getElementById('message-list');
+                msgList.innerHTML = "";
+
+
+                var li = '';
                 messages.forEach(function (m) {
 
-                    var li = '';
                     li += '<li>' + '<div class="comment">';
-
 
                     li += '<img src="' + m.pic + '" class="circle" alt="">' +
                         '<span class="user-text">'
@@ -97,18 +132,38 @@ var babble = {
                         '</span>' +
                         '</div>' +
                         '</li>';
-                    $("ul#message-list").append(li);
+
                 });
-            },
-            dataType: 'json'
-        });
+                msgList.innerHTML = li;
+            }
+            http.send();
+        }
+
     },
     subscribe: function () {
-        $.getJSON('http://localhost:9000/subscribe', function (response) {
-            babble.users = response.users;
 
-            document.getElementsByClassName('users')[0].innerHTML = babble.users;
-        });
+        var http = new XMLHttpRequest();
+        var url = 'http://localhost:9000/subscribe';
+
+        http.open("GET", url, true);
+
+        http.setRequestHeader("Content-type", "application/json; charset=utf-8");
+
+
+        http.onreadystatechange = function () {
+            if (http.readyState == 4 && http.status == 200) {
+                var response = JSON.parse(http.responseText);// alert(http.responseText);
+                babble.users = response.users;
+
+                document.getElementsByClassName('users')[0].innerHTML = babble.users;
+
+            }
+        }
+        http.send();
+
+        // $.getJSON('http://localhost:9000/subscribe', function (response) {
+        //
+        // });
     }
 };
 
@@ -137,7 +192,7 @@ btnSave.onclick = function () {
     localStorage.babble = JSON.stringify(babble);
     babble.subscribe();
     modal.style.display = "none";
-    var imageUrl='http://www.gravatar.com/avatar/' + MD5(babble.userInfo.email) + '.jpg';
+    var imageUrl = 'http://www.gravatar.com/avatar/' + MD5(babble.userInfo.email) + '.jpg';
 
     babble.userInfo.pic = imageUrl;//'http://lorempixel.com/400/200/';
 
